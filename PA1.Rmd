@@ -32,9 +32,10 @@ hist(date_sum$steps, xlab = "Total steps per day", main = "")
 
 3. Calculate and report the mean and median of the total number of steps taken per day  
 ```{r}
-mean(date_sum$steps)
-median(date_sum$steps)
+meanSteps <- mean(date_sum$steps)
+medianSteps <- median(date_sum$steps)
 ```
+The mean of the total number of steps taken per day is `meanSteps` and the median is `medianSteps`.
 
 ## What is the average daily activity pattern?
 1.Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)  
@@ -47,14 +48,16 @@ with(int_avg, plot(interval, steps, type = "l"))
 
 2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?  
 ```{r}
-int_avg$interval[which.max(int_avg$steps)]
+maxInt <- int_avg$interval[which.max(int_avg$steps)]
 ```
+The maximum average steps are in the `maxInt` interval.
 
 ## Imputing missing values
 1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)  
 ```{r}
-sum(is.na(activity$steps))
+missing <- sum(is.na(activity$steps))
 ```
+There are `missing` rows with NAs.
 
 2. Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc. 
    Use the mean for the 5-minute interval
@@ -74,40 +77,32 @@ rownames(new_df) <- c(1:17568)
 ```
 
 4. Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?  
-   Because I used the mean to impute the missing data, the mean and median are the same and the histogram shows a higher peak as the mean.
+
 ```{r}
 date_sum_new <- as.data.frame(colSums(int_date[2:62], na.rm = TRUE))
 colnames(date_sum_new) <- "steps"
 date_sum_new$date <- rownames(date_sum_new)
 hist(date_sum_new$steps, xlab = "Total steps per day", main = "With imputed data")
-mean(date_sum_new$steps)
-median(date_sum_new$steps)
+newMean <- mean(date_sum_new$steps)
+newMedian <- median(date_sum_new$steps)
 ```
+The new mean is `newMean` and the new median is `newMedian`, which are the same as before imputing the data.  Because I used the mean to impute the missing data, the mean and median are the same and the histogram shows a higher peak as the mean.
+
 
 ## Are there differences in activity patterns between weekdays and weekends?
 1. Create a new factor variable in the dataset with two levels - "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.  
 ```{r}
+weekend <- c("Saturday", "Sunday")
 new_df$weekday <- as.factor(ifelse(weekdays(new_df$date) %in% 
-                            c("Saturday", "Sunday"), "weekend", "weekday"))
+                            weekend, "weekend", "weekday"))
 ```
 
 2. Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.  
 ```{r}
-date_int_we <- dcast(new_df[which(new_df$weekday == "weekend"), ], 
-                     date ~ interval, value.var = "steps")
-int_avg_we <- as.data.frame(colMeans(date_int_we[2:289], na.rm = TRUE))
-colnames(int_avg_we) <- "steps"
-int_avg_we$interval <- rownames(int_avg_we)
-int_avg_we$weekday <- "weekend"
-date_int_wd <- dcast(new_df[which(new_df$weekday == "weekday"), ], 
-                     date ~ interval, value.var = "steps")
-int_avg_wd <- as.data.frame(colMeans(date_int_wd[2:289], na.rm = TRUE))
-colnames(int_avg_wd) <- "steps"
-int_avg_wd$interval <- rownames(int_avg_wd)
-int_avg_wd$weekday <- "weekday"
-int_avg_new <- rbind(int_avg_we, int_avg_wd)
+intavg <- aggregate(steps ~ interval + weekday, new_df, mean)
+
 library(lattice)
-with(int_avg_new, xyplot(steps ~ interval | weekday, layout = c(1, 2), 
+with(intavg, xyplot(steps ~ interval | weekday, layout = c(1, 2), 
                          type = "l", xlab = "Interval", 
                          ylab = "Number of steps"))
 ```
